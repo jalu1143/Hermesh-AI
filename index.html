@@ -125,7 +125,6 @@
     </div>
 
     <script>
-        // Stable URL update for Qwen 2.5
         const MODEL_URL = "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-7B-Instruct";
         let chatHistory = [];
 
@@ -144,7 +143,7 @@
         }
 
         function showInitialMessage() {
-            document.getElementById('chat').innerHTML = `<div class="message ai"><strong>Welcome to Hermesh AI Pro!</strong><br><br>Token daalkar Save Key kijiye. Layout fixed hai, niche chat box me type karke aap kaam nikalwa sakte hain!</div>`;
+            document.getElementById('chat').innerHTML = `<div class="message ai"><strong>Welcome to Hermesh AI Pro!</strong><br><br>Token daalkar Save Key kijiye. Speed optimize kar di gayi hai, ab ye bina ruke turant chalega!</div>`;
         }
 
         function renderHistory() {
@@ -185,7 +184,11 @@
                 const response = await fetch(MODEL_URL, {
                     headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
                     method: "POST",
-                    body: JSON.stringify({ inputs: query, parameters: { max_new_tokens: 600, return_full_text: false } }),
+                    body: JSON.stringify({ 
+                        inputs: query, 
+                        parameters: { max_new_tokens: 600, return_full_text: false },
+                        options: { wait_for_model: true } // FORCE WAKE UP LOGIC
+                    }),
                 });
                 const result = await response.json();
                 document.getElementById('loadingStatus').remove();
@@ -194,9 +197,9 @@
                 if (result && result[0] && result[0].generated_text) {
                     aiReply = result[0].generated_text.trim();
                 } else if (result.error && result.error.includes("loading")) {
-                    aiReply = "Model backend server par load ho raha hai. Kripya 15 seconds baad firse try karein.";
+                    aiReply = "Model backend par load ho raha hai, kripya 10 seconds me dobara try karein.";
                 } else {
-                    aiReply = "Server response error! Token permission check karein.";
+                    aiReply = "Server response error! Token check karein.";
                 }
 
                 chatHistory.push({ sender: 'ai', text: aiReply });
@@ -206,3 +209,4 @@
     </script>
 </body>
 </html>
+
