@@ -110,8 +110,8 @@
     </div>
 
     <div class="token-bar">
-        <span>🔑 HF Token:</span>
-        <input type="password" id="tokenInput" placeholder="hf_...">
+        <span>🔑 Gemini Key:</span>
+        <input type="password" id="tokenInput" placeholder="AIzaSy...">
         <button class="btn-save" onclick="saveToken()">Save Key</button>
     </div>
 
@@ -125,11 +125,10 @@
     </div>
 
     <script>
-        const MODEL_URL = "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-7B-Instruct";
         let chatHistory = [];
 
         window.onload = function() {
-            const savedToken = localStorage.getItem('hf_token');
+            const savedToken = localStorage.getItem('gemini_token');
             if(savedToken) document.getElementById('tokenInput').value = savedToken;
             const savedChat = localStorage.getItem('chat_history');
             if(savedChat) { chatHistory = JSON.parse(savedChat); renderHistory(); } else { showInitialMessage(); }
@@ -138,12 +137,12 @@
         function saveToken() {
             const token = document.getElementById('tokenInput').value.trim();
             if(!token) return;
-            localStorage.setItem('hf_token', token);
-            alert("Key Saved Successfully!");
+            localStorage.setItem('gemini_token', token);
+            alert("Gemini Key Saved Successfully!");
         }
 
         function showInitialMessage() {
-            document.getElementById('chat').innerHTML = `<div class="message ai"><strong>Welcome to Hermesh AI Pro!</strong><br><br>Token daalkar Save Key kijiye. Speed optimize kar di gayi hai, ab ye bina ruke turant chalega!</div>`;
+            document.getElementById('chat').innerHTML = `<div class="message ai"><strong>Welcome to Hermesh AI Pro (Gemini Powered)!</strong><br><br>Google AI Studio se key nikal kar Save Key kijiye. Ab bina kisi lag aur network error ke super-fast chalega!</div>`;
         }
 
         function renderHistory() {
@@ -169,7 +168,7 @@
 
         async function sendMessage() {
             const input = document.getElementById('msgInput'); const query = input.value.trim(); if(!query) return;
-            const token = localStorage.getItem('hf_token'); if(!token) { alert("Pehle token save karein!"); return; }
+            const token = localStorage.getItem('gemini_token'); if(!token) { alert("Pehle Gemini Key save karein!"); return; }
             
             let chat = document.getElementById('chat');
             chatHistory.push({ sender: 'user', text: query });
@@ -180,31 +179,30 @@
             statusDiv.innerHTML = `<div class="pulse-dot"></div> Hermesh is thinking...`;
             chat.appendChild(statusDiv); chat.scrollTop = chat.scrollHeight;
 
+            // Updated Google Gemini API URL
+            const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${token}`;
+
             try {
-                const response = await fetch(MODEL_URL, {
-                    headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+                const response = await fetch(GEMINI_URL, {
+                    headers: { "Content-Type": "application/json" },
                     method: "POST",
-                    body: JSON.stringify({ 
-                        inputs: query, 
-                        parameters: { max_new_tokens: 600, return_full_text: false },
-                        options: { wait_for_model: true } // FORCE WAKE UP LOGIC
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: query }] }]
                     }),
                 });
                 const result = await response.json();
                 document.getElementById('loadingStatus').remove();
                 
                 let aiReply = "";
-                if (result && result[0] && result[0].generated_text) {
-                    aiReply = result[0].generated_text.trim();
-                } else if (result.error && result.error.includes("loading")) {
-                    aiReply = "Model backend par load ho raha hai, kripya 10 seconds me dobara try karein.";
+                if (result && result.candidates && result.candidates[0].content.parts[0].text) {
+                    aiReply = result.candidates[0].content.parts[0].text.trim();
                 } else {
-                    aiReply = "Server response error! Token check karein.";
+                    aiReply = "Key invalid hai ya server temporary busy hai. Kripya key dubara check karein.";
                 }
 
                 chatHistory.push({ sender: 'ai', text: aiReply });
                 localStorage.setItem('chat_history', JSON.stringify(chatHistory)); renderHistory();
-            } catch (error) { document.getElementById('loadingStatus').remove(); chatHistory.push({ sender: 'ai', text: "Network error!" }); renderHistory(); }
+            } catch (error) { document.getElementById('loadingStatus').remove(); chatHistory.push({ sender: 'ai', text: "Connection error!" }); renderHistory(); }
         }
     </script>
 </body>
