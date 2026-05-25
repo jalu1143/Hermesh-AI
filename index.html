@@ -15,10 +15,7 @@
             height: 100%;
             overflow: hidden;
         }
-        body {
-            display: flex; 
-            flex-direction: column;
-        }
+        body { display: flex; flex-direction: column; }
         .header { 
             background: #16161a; 
             padding: 12px 16px; 
@@ -122,12 +119,13 @@
 
     <div class="input-area">
         <div class="input-wrapper">
-            <input type="text" id="msgInput" class="chat-input" placeholder="Ask OpenHermes anything..." onkeypress="handleKeyPress(event)">
+            <input type="text" id="msgInput" class="chat-input" placeholder="Ask Hermesh anything..." onkeypress="handleKeyPress(event)">
         </div>
         <button class="btn-send" onclick="sendMessage()">Send</button>
     </div>
 
     <script>
+        // Stable URL update for Qwen 2.5
         const MODEL_URL = "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-7B-Instruct";
         let chatHistory = [];
 
@@ -146,7 +144,7 @@
         }
 
         function showInitialMessage() {
-            document.getElementById('chat').innerHTML = `<div class="message ai"><strong>Welcome to Hermesh AI Pro!</strong><br><br>Token daalkar Save Key kijiye. Layout fixed hai, niche chat box me type karke OpenHermes se kaam nikalwayiye!</div>`;
+            document.getElementById('chat').innerHTML = `<div class="message ai"><strong>Welcome to Hermesh AI Pro!</strong><br><br>Token daalkar Save Key kijiye. Layout fixed hai, niche chat box me type karke aap kaam nikalwa sakte hain!</div>`;
         }
 
         function renderHistory() {
@@ -162,8 +160,8 @@
 
         function downloadChatLog() {
             if(chatHistory.length === 0) return;
-            let text = "--- Chat History ---\\n\\n";
-            chatHistory.forEach(msg => { text += `[${msg.sender.toUpperCase()}]: ${msg.text}\\n\\n`; });
+            let text = "--- Chat History ---\n\n";
+            chatHistory.forEach(msg => { text += `[${msg.sender.toUpperCase()}]: ${msg.text}\n\n`; });
             let blob = new Blob([text], { type: "text/plain;charset=utf-8" });
             let a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "Hermesh_Chat.txt"; a.click();
         }
@@ -180,7 +178,7 @@
             renderHistory(); input.value = "";
 
             let statusDiv = document.createElement('div'); statusDiv.className = "status"; statusDiv.id = "loadingStatus";
-            statusDiv.innerHTML = `<div class="pulse-dot"></div> OpenHermes is thinking...`;
+            statusDiv.innerHTML = `<div class="pulse-dot"></div> Hermesh is thinking...`;
             chat.appendChild(statusDiv); chat.scrollTop = chat.scrollHeight;
 
             try {
@@ -191,7 +189,16 @@
                 });
                 const result = await response.json();
                 document.getElementById('loadingStatus').remove();
-                let aiReply = (result && result[0] && result[0].generated_text) ? result[0].generated_text.trim() : "Response error! Token check karein.";
+                
+                let aiReply = "";
+                if (result && result[0] && result[0].generated_text) {
+                    aiReply = result[0].generated_text.trim();
+                } else if (result.error && result.error.includes("loading")) {
+                    aiReply = "Model backend server par load ho raha hai. Kripya 15 seconds baad firse try karein.";
+                } else {
+                    aiReply = "Server response error! Token permission check karein.";
+                }
+
                 chatHistory.push({ sender: 'ai', text: aiReply });
                 localStorage.setItem('chat_history', JSON.stringify(chatHistory)); renderHistory();
             } catch (error) { document.getElementById('loadingStatus').remove(); chatHistory.push({ sender: 'ai', text: "Network error!" }); renderHistory(); }
@@ -199,4 +206,3 @@
     </script>
 </body>
 </html>
-
