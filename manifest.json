@@ -1,0 +1,16 @@
+{
+  "name": "Hermesh AI Mobile",
+  "short_name": "HermeshAI",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#131314",
+  "theme_color": "#131314",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1698/1698535.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

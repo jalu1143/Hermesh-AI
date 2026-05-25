@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hermesh AI Mobile</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#131314">
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #131314; color: #e3e3e3; display: flex; flex-direction: column; height: 100vh; }
+        .header { background: #1e1f20; color: #fff; padding: 15px; text-align: center; font-size: 1.2rem; font-weight: bold; border-bottom: 1px solid #303132; }
+        .chat-container { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .message { padding: 12px 16px; border-radius: 18px; max-width: 80%; word-wrap: break-word; line-height: 1.4; }
+        .user { background: #303132; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .ai { background: #1e1f20; color: #e3e3e3; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid #444746; }
+        .status { font-size: 0.8rem; color: #888; align-self: flex-start; margin-left: 5px; }
+        .input-area { display: flex; padding: 12px; background: #1e1f20; border-top: 1px solid #303132; gap: 8px; }
+        input { flex: 1; padding: 12px 18px; background: #2a2b2d; border: 1px solid #444746; border-radius: 24px; color: #fff; outline: none; font-size: 1rem; }
+        input::placeholder { color: #8e918f; }
+        button { background: #a8c7fa; color: #042f66; border: none; padding: 0 20px; border-radius: 24px; font-weight: bold; cursor: pointer; font-size: 1rem; transition: background 0.2s; }
+        button:hover { background: #c2e7ff; }
+    </style>
+</head>
+<body>
+
+    <div class="header">OpenHermes AI</div>
+    <div class="chat-container" id="chat">
+        <div class="message ai">Hi! Main OpenHermes AI hoon. Aap mujhse kuch bhi pooch sakte hain.</div>
+    </div>
+    <div class="input-area">
+        <input type="text" id="msgInput" placeholder="Ask OpenHermes anything..." onkeypress="handleKeyPress(event)">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        // Service Worker Register
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').then(() => console.log("SW Registered"));
+        }
+
+        // --- API CONFIGURATION ---
+        // 1. Hugging Face par free account banayein (huggingface.co)
+        // 2. Settings -> Access Tokens me jaakar ek "Read" token generate karein
+        // 3. Us token ko neeche "YOUR_HUGGINGFACE_API_KEY" ki jagah paste kar dein
+        const API_KEY = "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"; 
+        const MODEL_URL = "https://api-inference.huggingface.co/models/teknium/OpenHermes-2.5-Mistral-7B";
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        async function sendMessage() {
+            let input = document.getElementById('msgInput');
+            let query = input.value.trim();
+            if(query === "" || API_KEY === "YOUR_HUGGINGFACE_API_KEY") {
+                if(API_KEY === "YOUR_HUGGINGFACE_API_KEY") {
+                    alert("Please pehle code me apni Hugging Face API Key daalein!");
+                }
+                return;
+            }
+            
+            let chat = document.getElementById('chat');
+            
+            // 1. User ka message screen par dikhana
+            let userDiv = document.createElement('div');
+            userDiv.className = "message user";
+            userDiv.innerText = query;
+            chat.appendChild(userDiv);
+            
+            input.value = "";
+            chat.scrollTop = chat.scrollHeight;
+
+            // 2. Loading status dikhana
+            let statusDiv = document.createElement('div');
+            statusDiv.className = "status";
+            statusDiv.innerText = "OpenHermes is thinking...";
+            chat.appendChild(statusDiv);
+            chat.scrollTop = chat.scrollHeight;
+
+            try {
+                // 3. OpenHermes API ko call karna
+                const response = await fetch(MODEL_URL, {
+                    headers: { 
+                        "Authorization": `Bearer ${API_KEY}`,
+                        "Content-Type": "application/json"
+                    },
+                    method: "POST",
+                    body: JSON.stringify({ 
+                        inputs: query,
+                        parameters: { max_new_tokens: 500, return_full_text: false }
+                    }),
+                });
+
+                const result = await response.json();
+                
+                // Status hatana
+                chat.removeChild(statusDiv);
+
+                // 4. AI ka response screen par dikhana
+                let aiDiv = document.createElement('div');
+                aiDiv.className = "message ai";
+                
+                if (result && result[0] && result[0].generated_text) {
+                    aiDiv.innerText = result[0].generated_text.trim();
+                } else if (result.error && result.error.includes("loading")) {
+                    aiDiv.innerText = "Model abhi load ho raha hai (Hugging Face par pehli baar me thoda waqt lagta hai). Kripya 20 seconds baad firse try karein.";
+                } else {
+                    aiDiv.innerText = "Sorry, kuch error aaya. Firse try karein.";
+                }
+                
+                chat.appendChild(aiDiv);
+                chat.scrollTop = chat.scrollHeight;
+
+            } catch (error) {
+                console.error(error);
+                chat.removeChild(statusDiv);
+                let errorDiv = document.createElement('div');
+                errorDiv.className = "message ai";
+                errorDiv.innerText = "Network error! Connection check karein.";
+                chat.appendChild(errorDiv);
+                chat.scrollTop = chat.scrollHeight;
+            }
+        }
+    </script>
+</body>
+</html>
