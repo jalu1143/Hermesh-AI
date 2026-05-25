@@ -1,10 +1,10 @@
 {
-  "name": "Hermesh AI Mobile",
-  "short_name": "HermeshAI",
+  "name": "Hermesh AI Pro",
+  "short_name": "HermeshPro",
   "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#131314",
-  "theme_color": "#131314",
+  "background_color": "#0f0f11",
+  "theme_color": "#0f0f11",
   "orientation": "portrait-primary",
   "icons": [
     {
